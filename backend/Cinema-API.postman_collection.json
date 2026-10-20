@@ -1,0 +1,962 @@
+{
+  "info": {
+    "_postman_id": "b7e2f5a1-3c4d-4e8f-9a01-cinemaapi0002",
+    "name": "Cinema API",
+    "description": "Colección para probar la API REST de compra de entradas de cine (FastAPI) con autenticación JWT, roles y paginación.\n\nUsuarios de prueba:\n- admin / admin123 (informático: usuarios, roles y sistema)\n- manager / manager123 (jefe: catálogo y estadísticas)\n- user / user123 (cliente)\n\nEjecuta primero 'Login (admin)', 'Login (manager)' o 'Login (user)': el token se guarda automáticamente en la variable de colección {{token}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "user",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "user123",
+      "type": "string"
+    },
+    {
+      "key": "admin_username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "admin123",
+      "type": "string"
+    },
+    {
+      "key": "movie_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "showtime_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "ticket_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "manager_username",
+      "value": "manager",
+      "type": "string"
+    },
+    {
+      "key": "manager_password",
+      "value": "manager123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Estado",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Info API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Login (user)",
+          "auth": {
+            "type": "noauth"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.access_token) { pm.collectionVariables.set('token', json.access_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login (admin)",
+          "auth": {
+            "type": "noauth"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.access_token) { pm.collectionVariables.set('token', json.access_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{admin_username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login (manager)",
+          "auth": {
+            "type": "noauth"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.access_token) { pm.collectionVariables.set('token', json.access_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "{{manager_username}}",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{manager_password}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar usuario",
+          "auth": {
+            "type": "noauth"
+          },
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nuevo\",\n  \"email\": \"nuevo@example.com\",\n  \"password\": \"clave123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Usuario actual (me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Películas",
+      "item": [
+        {
+          "name": "Listar películas (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/movies?page=1&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear película (manager/admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('movie_id', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Generación Perdida\",\n  \"genre\": \"Drama\",\n  \"duration_minutes\": 118,\n  \"poster_url\": \"https://upload.wikimedia.org/wikipedia/en/d/db/The_Matrix.png\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/movies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "movies"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener película",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/movies/{{movie_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "movies",
+                "{{movie_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modificar película (manager/admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Generación Perdida (v2)\",\n  \"genre\": \"Drama\",\n  \"duration_minutes\": 120,\n  \"poster_url\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/movies/{{movie_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "movies",
+                "{{movie_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar película (manager/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/movies/{{movie_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "movies",
+                "{{movie_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Funciones",
+      "item": [
+        {
+          "name": "Listar funciones (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/showtimes?page=1&size=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "showtimes"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar funciones de una película",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/showtimes?movie_id={{movie_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "showtimes"
+              ],
+              "query": [
+                {
+                  "key": "movie_id",
+                  "value": "{{movie_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear función (manager/admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('showtime_id', json.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 1,\n  \"room\": \"Sala 6\",\n  \"start_time\": \"2026-10-14T21:00:00\",\n  \"total_seats\": 100,\n  \"price\": 8.5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "showtimes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener función",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/showtimes/{{showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "showtimes",
+                "{{showtime_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Modificar función (manager/admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"room\": \"Sala 6 VIP\",\n  \"total_seats\": 120,\n  \"price\": 9.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/showtimes/{{showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "showtimes",
+                "{{showtime_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar función (manager/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/showtimes/{{showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "showtimes",
+                "{{showtime_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mapa de asientos (elegir butacas)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/showtimes/{{showtime_id}}/seats",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "showtimes",
+                "{{showtime_id}}",
+                "seats"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservas",
+      "item": [
+        {
+          "name": "Comprar entradas (autenticado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.ticket && json.ticket.id) { pm.collectionVariables.set('ticket_id', json.ticket.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"showtime_id\": {{showtime_id}},\n  \"customer_name\": \"Ana López\",\n  \"quantity\": 2,\n  \"seats\": [\"A1\", \"A2\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/book",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "book"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Comprar sin asientos suficientes (error 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"showtime_id\": {{showtime_id}},\n  \"customer_name\": \"Prueba Error\",\n  \"quantity\": 99999\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/book",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "book"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Comprar butaca ya ocupada (error 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"showtime_id\": {{showtime_id}},\n  \"customer_name\": \"Otra Persona\",\n  \"quantity\": 1,\n  \"seats\": [\"A1\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/book",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "book"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar reservas (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets?page=1&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar todas las reservas (manager/admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets?scope=all&page=1&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "scope",
+                  "value": "all"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar entradas de un jugador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets?scope=all&search=user",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "scope",
+                  "value": "all"
+                },
+                {
+                  "key": "search",
+                  "value": "user"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Listar todas las reservas como cliente (error 403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets?scope=all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets"
+              ],
+              "query": [
+                {
+                  "key": "scope",
+                  "value": "all"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancelar entrada (manager/admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets/{{ticket_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "{{ticket_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios (admin)",
+      "item": [
+        {
+          "name": "Listar usuarios (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/users?page=1&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar rol de un usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"manager\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/users/3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "users",
+                "3"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Restablecer clave de un usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"nuevaClave123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/users/3/password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "users",
+                "3",
+                "password"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/users/3",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "users",
+                "3"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estadísticas",
+      "item": [
+        {
+          "name": "Dashboard (manager/admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Información del sistema (admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/stats/system",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "stats",
+                "system"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
