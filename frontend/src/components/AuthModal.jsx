@@ -102,6 +102,16 @@ export default function AuthModal() {
             <button type="submit" className="ca-btn ca-btn-primary ca-btn-block" disabled={busy}>
               {busy ? "Entrando…" : "Entrar"}
             </button>
+            <div className="ca-divider" style={{ margin: "16px 0", textAlign: "center", color: "#888" }}>
+              <span>o</span>
+            </div>
+            <a
+              href="/auth/github"
+              className="ca-btn ca-btn-block"
+              style={{ background: "#24292e", color: "#fff", textDecoration: "none", display: "block", textAlign: "center" }}
+            >
+              Iniciar sesión con GitHub
+            </a>
             <p className="ca-hint">
               Prueba: <code>admin / admin123</code> · <code>user / user123</code>
             </p>

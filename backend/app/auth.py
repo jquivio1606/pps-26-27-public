@@ -28,6 +28,20 @@ credentials_exception = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
+# GitHub OAuth
+def get_github_config():
+    from dotenv import load_dotenv
+    from pathlib import Path
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+    client_id = os.getenv("GITHUB_CLIENT_ID") or os.getenv("CLIENT_ID") or os.getenv("GITHUB_OAUTH_CLIENT_ID") or ""
+    client_secret = os.getenv("GITHUB_CLIENT_SECRET") or os.getenv("CLIENT_SECRET") or os.getenv("GITHUB_OAUTH_CLIENT_SECRET") or ""
+    redirect_uri = os.getenv("GITHUB_REDIRECT_URI") or os.getenv("REDIRECT_URI") or os.getenv("GITHUB_CALLBACK_URL") or "http://127.0.0.1:8000/auth/github/callback"
+    return client_id, client_secret, redirect_uri
+
+
+GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URI = get_github_config()
+
 
 # --------------------------------------------------------------------------- #
 #  Roles

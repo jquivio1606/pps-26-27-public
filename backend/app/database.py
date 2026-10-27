@@ -8,8 +8,15 @@ la variable de entorno ``DATABASE_URL``.
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
+# Cargar variables de entorno desde .env si existe
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_ENV_PATH = _PROJECT_ROOT / ".env"
+load_dotenv(_ENV_PATH)
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 # La base de datos vive junto al código, en ``backend/cinema.db``. Se usa una
 # ruta absoluta para que no dependa del directorio desde el que se arranque.
@@ -48,9 +55,25 @@ def run_light_migrations(bind=engine) -> None:
     se comprueban y añaden las columnas nuevas que hayan surgido.
     """
     inspector = inspect(bind)
-    if "movies" not in inspector.get_table_names():
-        return
-    columns = {col["name"] for col in inspector.get_columns("movies")}
-    if "poster_url" not in columns:
+    table_names = inspector.get_table_names()
+
+    if "movies" in table_names:
+        columns = {col["name"] for col in inspector.get_columns("movies")}
+        if "poster_url" not in columns:
+            with bind.begin() as conn:
+                conn.execute(text("ALTER TABLE movies ADD COLUMN poster_url VARCHAR(500)"))
+
+    if "users" in table_names:
+        columns = {col["name"] for col in inspector.get_columns("users")}
         with bind.begin() as conn:
-            conn.execute(text("ALTER TABLE movies ADD COLUMN poster_url VARCHAR(500)"))
+            if "oauth_provider" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN oauth_provider VARCHAR(20)"))
+            if "oauth_id" not in columns:
+                conn.execute(text("ALTER TABLE users ADD COLUMN oauth_id VARCHAR(100)"))
+            # Make hashed_password nullable if it isn't
+            try:
+                conn.execute(text("PRAGMA writable_schema=1"))
+                conn.execute(text("UPDATE sqlite_master SET sql=replace(sql,'hashed_password VARCHAR(255) NOT NULL','hashed_password VARCHAR(255)') WHERE type='table' AND name='users'"))
+                conn.execute(text("PRAGMA writable_schema=0"))
+            except Exception:
+                pass

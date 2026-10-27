@@ -1,6 +1,11 @@
 """Endpoints del módulo de Autenticación y gestión de usuarios."""
 
+import os
+from urllib.parse import urlencode
+
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -10,6 +15,7 @@ from ..auth import (
     ROLE_USER,
     create_access_token,
     get_current_user,
+    get_github_config,
     hash_password,
     is_valid_role,
     require_admin,
@@ -28,6 +34,16 @@ from ..schemas import (
 )
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
+
+
+@router.get("/github/config", summary="Ver configuración GitHub OAuth (debug)")
+def github_config_debug():
+    GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URI = get_github_config()
+    return {
+        "client_id": GITHUB_CLIENT_ID[:8] + "..." if GITHUB_CLIENT_ID else None,
+        "redirect_uri": GITHUB_REDIRECT_URI,
+        "has_secret": bool(GITHUB_CLIENT_SECRET),
+    }
 
 
 @router.post(
@@ -79,7 +95,9 @@ def login(
         select(User).where(User.username == form_data.username)
     ).scalar_one_or_none()
 
-    if user is None or not verify_password(form_data.password, user.hashed_password):
+    if user is None or not user.hashed_password or not verify_password(
+        form_data.password, user.hashed_password
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario o contraseña incorrectos",
@@ -93,6 +111,130 @@ def login(
 def read_me(current_user: User = Depends(get_current_user)) -> User:
     """Devuelve la información del usuario asociado al token enviado."""
     return current_user
+
+
+@router.get("/github", summary="Iniciar autenticación con GitHub (OAuth)")
+def github_login():
+    GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URI = get_github_config()
+    if not GITHUB_CLIENT_ID:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="GitHub OAuth no configurado. Añade GITHUB_CLIENT_ID y GITHUB_CLIENT_SECRET en .env",
+        )
+    print(f"[DEBUG] GitHub OAuth redirect_uri: {GITHUB_REDIRECT_URI}", flush=True)
+    print(f"[DEBUG] GitHub OAuth client_id: {GITHUB_CLIENT_ID[:8]}...", flush=True)
+    params = {
+        "client_id": GITHUB_CLIENT_ID,
+        "redirect_uri": GITHUB_REDIRECT_URI,
+        "scope": "user:email",
+        "allow_signup": "true",
+    }
+    url = "https://github.com/login/oauth/authorize?" + urlencode(params)
+    print(f"[DEBUG] GitHub auth URL: {url}", flush=True)
+    return RedirectResponse(url=url)
+
+
+@router.get("/github/callback", summary="Callback de GitHub OAuth")
+async def github_callback(code: str | None = None, db: Session = Depends(get_db)):
+    GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, GITHUB_REDIRECT_URI = get_github_config()
+    if not code:
+        raise HTTPException(status_code=400, detail="Falta el código de autorización de GitHub")
+    if not GITHUB_CLIENT_ID or not GITHUB_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=500,
+            detail="GitHub OAuth no configurado. Añade GITHUB_CLIENT_ID y GITHUB_CLIENT_SECRET en .env",
+        )
+
+    async with httpx.AsyncClient() as client:
+        token_resp = await client.post(
+            "https://github.com/login/oauth/access_token",
+            headers={"Accept": "application/json"},
+            data={
+                "client_id": GITHUB_CLIENT_ID,
+                "client_secret": GITHUB_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": GITHUB_REDIRECT_URI,
+            },
+        )
+        token_data = token_resp.json()
+        access_token = token_data.get("access_token")
+        if not access_token:
+            raise HTTPException(status_code=400, detail="No se pudo obtener token de GitHub")
+
+        user_resp = await client.get(
+            "https://api.github.com/user",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json",
+                "User-Agent": "Cinema-API",
+            },
+        )
+        gh_user = user_resp.json()
+
+        emails_resp = await client.get(
+            "https://api.github.com/user/emails",
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json",
+                "User-Agent": "Cinema-API",
+            },
+        )
+        emails = emails_resp.json()
+        primary_email = None
+        for e in emails:
+            if isinstance(e, dict) and e.get("primary") and e.get("verified"):
+                primary_email = e.get("email")
+                break
+        if not primary_email and emails and isinstance(emails[0], dict):
+            primary_email = emails[0].get("email")
+
+    github_id = str(gh_user.get("id"))
+    username = gh_user.get("login") or f"github_{github_id}"
+    email = primary_email or gh_user.get("email") or f"{username}@users.noreply.github.com"
+
+    user = db.execute(
+        select(User).where(
+            or_(
+                User.oauth_provider == "github" and User.oauth_id == github_id,
+                User.email == email,
+            )
+        )
+    ).scalar_one_or_none()
+
+    if user is None:
+        # Ensure unique username
+        base_username = username
+        suffix = 0
+        while True:
+            existing = db.execute(
+                select(User).where(User.username == base_username)
+            ).scalar_one_or_none()
+            if not existing:
+                break
+            suffix += 1
+            base_username = f"{username}_{suffix}"
+        user = User(
+            username=base_username,
+            email=email,
+            hashed_password=None,
+            role=ROLE_USER,
+            oauth_provider="github",
+            oauth_id=github_id,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    else:
+        if not user.oauth_provider:
+            user.oauth_provider = "github"
+            user.oauth_id = github_id
+        db.commit()
+        db.refresh(user)
+
+    jwt_token = create_access_token(user)
+    # Redirect to frontend with token
+    redirect_url = f"/?token={jwt_token}"
+    return RedirectResponse(url=redirect_url)
 
 
 # --------------------------------------------------------------------------- #

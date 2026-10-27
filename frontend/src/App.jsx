@@ -30,6 +30,29 @@ function ScrollToTop() {
   return null;
 }
 
+function OAuthHandler() {
+  const location = useLocation();
+  useEffect(() => {
+    // Check both search params and hash
+    const urlParams = new URLSearchParams(window.location.search);
+    let token = urlParams.get("token");
+    if (!token && window.location.hash) {
+      const hash = window.location.hash;
+      if (hash.includes("?")) {
+        const hashQuery = hash.split("?")[1];
+        const hashParams = new URLSearchParams(hashQuery);
+        token = hashParams.get("token");
+      }
+    }
+    if (token) {
+      localStorage.setItem("cine_token", token);
+      // Remove token from URL
+      window.location.href = window.location.origin + "/#/";
+    }
+  }, [location]);
+  return null;
+}
+
 export default function App() {
   return (
     <ToastProvider>
@@ -37,6 +60,7 @@ export default function App() {
         <UIProvider>
           <HashRouter>
             <ScrollToTop />
+            <OAuthHandler />
             <Header />
             <main className="ca-main">
               <Routes>
