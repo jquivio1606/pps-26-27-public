@@ -1,0 +1,43 @@
+# Env / Configuración sensible
+.env
+.env.local
+.env.*.local
+*.env
+config.json
+*.pem
+*.key
+
+# Scripts de automatización y consola
+*.bat
+*.ps1
+*.cmd
+*.sh
+
+# Dependencias (Descomenta las que uses)
+node_modules/
+vendor/
+.venv/
+venv/
+env/
+
+# Archivos del sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Archivos de registro y temporales
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.cache/
+dist/
+build/
+out/
