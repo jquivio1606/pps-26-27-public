@@ -164,18 +164,103 @@ cd backend && uvicorn app.main:app --reload
 cd frontend && npm run dev
 ```
 
+### Conectar el frontend con el backend de Render
+
+El frontend apunta **por defecto** al backend desplegado en
+**https://pps-26-27-back.onrender.com**, así que no hace falta configurar nada:
+tanto `npm run dev` como `npm run build` usan esa URL (el *proxy* de Vite en
+desarrollo también apunta ahí y la API tiene CORS abierto).
+
+Para cambiar el destino se usa `VITE_API_BASE` en el momento de compilar:
+
+```bash
+cd frontend
+
+# Backend de Render (valor por defecto)
+npm run build
+
+# Otro backend, por ejemplo uno local
+VITE_API_BASE=http://127.0.0.1:8000 npm run build
+
+# Mismo origen: FastAPI sirve el frontend y la API (lo que usa start.bat)
+VITE_API_BASE=/ npm run build
+```
+
+> En PowerShell: `$env:VITE_API_BASE = "http://127.0.0.1:8000"; npm run build`.
+> Las variables de Vite se **incrustan en el build**, así que hay que volver a
+> compilar al cambiar de backend. La plantilla está en `frontend/.env.example`.
+
+Si publicas el frontend en un hosting distinto del backend (Vercel, Netlify,
+GitHub Pages…), configura las **reescrituras de SPA** hacia `index.html` para que
+rutas como `/admin` o `/dashboard` funcionen al recargar. El plan gratuito de
+Render suspende el servicio sin tráfico: la primera petición puede tardar
+alrededor de un minuto.
+
 ### Variables de entorno
 
 | Variable                     | Por defecto                              | Descripción                          |
 | ---------------------------- | ---------------------------------------- | ------------------------------------ |
-| `DATABASE_URL`               | `sqlite:///…/backend/cinema.db`          | Cadena de conexión de la base datos. |
+| `DATABASE_URL`               | `sqlite:///…/backend/cinema.db`          | Cadena de conexión de la base datos (PostgreSQL en Render). |
 | `SECRET_KEY`                 | `cambia-esta-clave-en-produccion-...`    | Clave de firma de los JWT.           |
 | `ACCESS_TOKEN_EXPIRE_MINUTES`| `60`                                     | Minutos de validez del token.        |
+| `VITE_API_BASE` (frontend)   | `https://pps-26-27-back.onrender.com`    | URL del backend al que apunta el frontend (se incrusta al compilar). |
+| `FRONTEND_URL`               | *(vacío: mismo origen)*                  | URL pública del frontend si está en otro origen; se usa al volver del login con GitHub. |
 
 > En producción **define siempre** `SECRET_KEY`.
 
 > Para recrear la base de datos desde cero, borra `backend/cinema.db` y vuelve a arrancar,
 > o ejecuta `python -m app.seed` desde la carpeta `backend/`.
+
+## Despliegue en Render con PostgreSQL
+
+La aplicación está preparada para ejecutarse como **un único Web Service**:
+FastAPI sirve la API y el frontend ya compilado (`frontend/dist`), y los datos
+se guardan en un PostgreSQL gestionado por Render.
+
+### 1. Crear la base de datos
+
+1. En Render: **New → Postgres**.
+2. Elige **la misma región** que vaya a tener el servicio web (para usar la red
+   privada).
+3. Copia la **Internal Database URL** (pestaña *Connections*). Tiene la forma
+   `postgresql://usuario:clave@dpg-xxxxx-a/base_de_datos`.
+
+### 2. Crear el Web Service
+
+| Campo             | Valor                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| Language          | `Python`                                                                               |
+| Root Directory    | *(vacío: la raíz del repositorio)*                                                      |
+| Build Command     | `pip install -r backend/requirements.txt && cd frontend && npm ci && npm run build`     |
+| Start Command     | `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`                        |
+| Health Check Path | `/health`                                                                              |
+
+### 3. Variables de entorno
+
+| Variable        | Valor                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`  | *Internal Database URL* del paso 1                                                         |
+| `SECRET_KEY`    | cadena aleatoria larga: `python -c "import secrets; print(secrets.token_urlsafe(48))"`     |
+| `PYTHON_VERSION`| `3.12.7` (las dependencias están fijadas para Python 3.12)                                  |
+| `VITE_API_BASE` | `/` (el servicio sirve frontend y API en el mismo origen)                                    |
+
+También puedes desplegar con el blueprint `render.yaml` incluido en la raíz:
+**New → Blueprint** → selecciona el repositorio. Después pega la
+`DATABASE_URL` en el dashboard (esa variable está marcada como `sync: false`).
+
+### Cómo se conecta
+
+* La URL se normaliza automáticamente: `postgres://` y `postgresql://` pasan a
+  `postgresql+psycopg://` (driver `psycopg` 3, añadido en `requirements.txt`).
+* Si usas la **External Database URL** (desde fuera de Render), se añade
+  `sslmode=require` automáticamente. La URL interna no lo necesita.
+* El motor usa `pool_pre_ping` y `pool_recycle=300` para no quedarse con
+  conexiones muertas.
+* Las tablas y los datos de prueba se crean solos al arrancar (`create_all` +
+  `seed_db`). Si en el futuro hay varios workers o cambios de esquema
+  habituales, conviene migrar a Alembic.
+* El plan gratuito de PostgreSQL en Render caduca a los 30 días; en planes de
+  pago configura copias de seguridad.
 
 ## Usuarios de prueba
 
@@ -227,8 +312,9 @@ aleatorio); la clave en texto plano nunca se almacena ni se devuelve por la API:
 
 ## Frontend web
 
-Con el servidor arrancado, la web está en **http://127.0.0.1:8000/** y consume la
-misma API (mismo origen). Incluye:
+Con el servidor arrancado, la web está en **http://127.0.0.1:8000/** y, por
+defecto, consume el backend de Render (`VITE_API_BASE`). Si se compila con
+`VITE_API_BASE=/`, consume la misma API (mismo origen). Incluye:
 
 - **Cartelera**: rejilla de películas con **póster** (imagen real incluida en el
   catálogo; respaldo gráfico si no carga) y paginación; pulsa una para ver su ficha y funciones.

@@ -49,7 +49,14 @@ if (Test-Path $distIndex) {
         if (-not (Test-Path "node_modules")) {
             & npm install --no-audit --no-fund
         }
-        & npm run build
+        # El lanzador local sirve frontend y API desde el mismo origen (FastAPI),
+        # así que se desactiva el backend remoto que se usa por defecto.
+        $env:VITE_API_BASE = "/"
+        try {
+            & npm run build
+        } finally {
+            Remove-Item Env:VITE_API_BASE -ErrorAction SilentlyContinue
+        }
         Pop-Location
     } else {
         Write-Host "[3/4] [AVISO] No se encontro Node/npm: el frontend no se compilara." -ForegroundColor Yellow

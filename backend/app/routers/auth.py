@@ -232,8 +232,11 @@ async def github_callback(code: str | None = None, db: Session = Depends(get_db)
         db.refresh(user)
 
     jwt_token = create_access_token(user)
-    # Redirect to frontend with token
-    redirect_url = f"/?token={jwt_token}"
+    # La web puede estar en otro origen (por ejemplo, el frontend en Vercel u
+    # otro servicio de Render): FRONTEND_URL=https://mi-frontend.com. Si no se
+    # define, se redirige al propio servicio (mismo origen).
+    frontend_url = os.getenv("FRONTEND_URL", "").rstrip("/")
+    redirect_url = f"{frontend_url}/?token={jwt_token}" if frontend_url else f"/?token={jwt_token}"
     return RedirectResponse(url=redirect_url)
 
 

@@ -36,7 +36,14 @@ def get_github_config():
     load_dotenv(Path(__file__).resolve().parent.parent / ".env")
     client_id = os.getenv("GITHUB_CLIENT_ID") or os.getenv("CLIENT_ID") or os.getenv("GITHUB_OAUTH_CLIENT_ID") or ""
     client_secret = os.getenv("GITHUB_CLIENT_SECRET") or os.getenv("CLIENT_SECRET") or os.getenv("GITHUB_OAUTH_CLIENT_SECRET") or ""
-    redirect_uri = os.getenv("GITHUB_REDIRECT_URI") or os.getenv("REDIRECT_URI") or os.getenv("GITHUB_CALLBACK_URL") or "http://127.0.0.1:8000/auth/github/callback"
+    # En Render, RENDER_EXTERNAL_URL ya contiene la URL pública del servicio.
+    public_base = os.getenv("RENDER_EXTERNAL_URL", "http://127.0.0.1:8000").rstrip("/")
+    redirect_uri = (
+        os.getenv("GITHUB_REDIRECT_URI")
+        or os.getenv("REDIRECT_URI")
+        or os.getenv("GITHUB_CALLBACK_URL")
+        or f"{public_base}/auth/github/callback"
+    )
     return client_id, client_secret, redirect_uri
 
 

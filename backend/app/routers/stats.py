@@ -64,8 +64,10 @@ def _technologies() -> list[TechItem]:
     """
     if DATABASE_URL.startswith("sqlite"):
         db_name = f"SQLite {sqlite3.sqlite_version}"
+    elif DATABASE_URL.startswith("postgresql"):
+        db_name = "PostgreSQL"
     else:
-        db_name = DATABASE_URL.split("://", 1)[0]
+        db_name = DATABASE_URL.split("://", 1)[0].split("+", 1)[0]
     return [
         TechItem(
             name="Python",

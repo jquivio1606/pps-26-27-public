@@ -1,0 +1,37 @@
+# Blueprint de Render: un único Web Service (FastAPI) + PostgreSQL externo.
+#
+# Uso: Render Dashboard -> New -> Blueprint -> selecciona este repositorio.
+# La variable DATABASE_URL se marca con `sync: false`, así que Render la pide
+# (o se pega después en el dashboard): usa la "Internal Database URL" de tu
+# base de datos PostgreSQL, p. ej.
+#   postgresql://usuario:clave@dpg-xxxxx-a/cinema_db
+#
+# IMPORTANTE: elige la misma región para el servicio y para la base de datos
+# (aquí "frankfurt") para que la conexión vaya por la red privada.
+
+services:
+  - type: web
+    name: cinema-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeploy: true
+    # Compila el frontend (React + Vite) y deja el resultado en frontend/dist,
+    # que FastAPI sirve como archivos estáticos.
+    buildCommand: pip install -r backend/requirements.txt && cd frontend && npm ci && npm run build
+    startCommand: cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      # El propio servicio sirve el frontend compilado, así que la web habla con
+      # la API por el mismo origen (sin CORS ni URL absoluta).
+      - key: VITE_API_BASE
+        value: "/"
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"

@@ -4,7 +4,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
 
-import { api } from "../api/client";
+import { api, apiUrl } from "../api/client";
 import SectionHeader from "../components/SectionHeader";
 import AdminTabs from "../components/AdminTabs";
 
@@ -167,13 +167,13 @@ export default function SystemPage() {
 
                     <h3 className="ca-card-title mt-4">Documentación</h3>
                     <div className="ca-form-actions">
-                      <a className="ca-btn ca-btn-outline ca-btn-sm" href={info.docs} target="_blank" rel="noreferrer">
+                      <a className="ca-btn ca-btn-outline ca-btn-sm" href={apiUrl(info.docs)} target="_blank" rel="noreferrer">
                         Swagger
                       </a>
-                      <a className="ca-btn ca-btn-outline ca-btn-sm" href={info.redoc} target="_blank" rel="noreferrer">
+                      <a className="ca-btn ca-btn-outline ca-btn-sm" href={apiUrl(info.redoc)} target="_blank" rel="noreferrer">
                         ReDoc
                       </a>
-                      <a className="ca-btn ca-btn-outline ca-btn-sm" href={info.openapi} target="_blank" rel="noreferrer">
+                      <a className="ca-btn ca-btn-outline ca-btn-sm" href={apiUrl(info.openapi)} target="_blank" rel="noreferrer">
                         OpenAPI
                       </a>
                     </div>

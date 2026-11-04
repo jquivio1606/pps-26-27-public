@@ -1,9 +1,26 @@
 /**
  * Cliente HTTP de la API de Cinema.
- * Mismo origen en producción; el servidor de Vite hace de proxy en desarrollo.
+ *
+ * Por defecto apunta al backend desplegado en Render. Se puede cambiar en
+ * tiempo de compilación con la variable de entorno `VITE_API_BASE`:
+ *
+ *   VITE_API_BASE=https://otro-backend.com  -> ese backend
+ *   VITE_API_BASE=/                         -> mismo origen (FastAPI sirve
+ *                                              el frontend y la API juntos)
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE || "";
+const DEFAULT_API_BASE = "https://pps-26-27-back.onrender.com";
+
+const configuredBase = import.meta.env.VITE_API_BASE;
+const API_BASE = (configuredBase === undefined ? DEFAULT_API_BASE : configuredBase).replace(
+  /\/+$/,
+  ""
+);
+
+/** URL absoluta de un recurso de la API (para enlaces y redirecciones). */
+export function apiUrl(path = "") {
+  return API_BASE + path;
+}
 
 export class ApiError extends Error {
   constructor(status, detail) {

@@ -66,7 +66,11 @@ if exist "frontend\dist\index.html" (
         echo [3/4] Compilando frontend ^(React + Vite^)...
         pushd frontend
         if not exist "node_modules" call npm install --no-audit --no-fund
+        REM El lanzador local sirve frontend y API desde el mismo origen (FastAPI),
+        REM asi que se desactiva el backend remoto que se usa por defecto.
+        set "VITE_API_BASE=/"
         call npm run build
+        set "VITE_API_BASE="
         popd
     )
 )

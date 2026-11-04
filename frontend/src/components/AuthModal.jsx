@@ -5,6 +5,7 @@ import Form from "react-bootstrap/Form";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useUI } from "../context/UIContext";
+import { apiUrl } from "../api/client";
 
 export default function AuthModal() {
   const { authModal, closeAuth, resumePendingBooking } = useUI();
@@ -106,7 +107,7 @@ export default function AuthModal() {
               <span>o</span>
             </div>
             <a
-              href="/auth/github"
+              href={apiUrl("/auth/github")}
               className="ca-btn ca-btn-block"
               style={{ background: "#24292e", color: "#fff", textDecoration: "none", display: "block", textAlign: "center" }}
             >
