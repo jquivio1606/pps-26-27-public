@@ -117,6 +117,10 @@ def ensure_passwords_encrypted(db: Session) -> int:
     """
     migrated = 0
     for user in db.scalars(select(User)).all():
+        # Los usuarios creados con OAuth (GitHub) no tienen contraseña:
+        # hashed_password es NULL y no hay nada que cifrar.
+        if not user.hashed_password:
+            continue
         if not is_hashed_password(user.hashed_password):
             user.hashed_password = hash_password(user.hashed_password)
             migrated += 1

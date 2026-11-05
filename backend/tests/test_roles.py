@@ -334,3 +334,25 @@ def test_migracion_cifra_claves_antiguas_en_texto_plano(client):
         client.post("/auth/login", data={"username": "legacy", "password": "claveEnClaro"}).status_code
         == 200
     )
+
+
+def test_migracion_ignora_usuarios_oauth_sin_clave(client):
+    """Un usuario de GitHub no tiene contraseña y no debe romper el arranque."""
+    with SessionLocal() as db:
+        db.add(
+            User(
+                username="github_user",
+                email="github_user@example.com",
+                hashed_password=None,
+                role="user",
+                oauth_provider="github",
+                oauth_id="123456",
+            )
+        )
+        db.commit()
+
+        assert ensure_passwords_encrypted(db) == 0
+        user = db.execute(
+            select(User).where(User.username == "github_user")
+        ).scalar_one()
+        assert user.hashed_password is None

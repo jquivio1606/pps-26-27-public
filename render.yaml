@@ -35,3 +35,17 @@ services:
         generateValue: true
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "60"
+      # Login con GitHub. Render pedirá estos valores al crear el Blueprint
+      # (o se pegan después en Dashboard -> Environment).
+      # No hace falta definir GITHUB_REDIRECT_URI: el backend usa
+      # RENDER_EXTERNAL_URL + /auth/github/callback automáticamente.
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      # Descomenta solo si usas un dominio propio o el frontend está en otro
+      # origen distinto del backend:
+      # - key: GITHUB_REDIRECT_URI
+      #   sync: false
+      # - key: FRONTEND_URL
+      #   sync: false
