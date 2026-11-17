@@ -4,6 +4,7 @@ API REST completa desarrollada con **FastAPI** para gestionar un sistema de comp
 de entradas de cine (autenticación, películas, funciones y reservas).
 
 - **Frontend web:** http://127.0.0.1:8000/
+- **Web desplegada en Render:** https://pps-26-27-front.onrender.com
 - **Documentación Swagger UI:** http://127.0.0.1:8000/docs
 - **Documentación ReDoc:** http://127.0.0.1:8000/redoc
 - **OpenAPI JSON:** http://127.0.0.1:8000/openapi.json
